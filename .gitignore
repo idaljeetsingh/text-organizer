@@ -1,0 +1,5 @@
+**/.venv
+**/venv
+*.crt
+*.key
+**/__pycache__
