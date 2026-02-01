@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Organizer</title>
+    <link href="css/vendor/bootstrap.min.css" rel="stylesheet">
+    <link href="css/vendor/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script type="text/javascript" src="/eel.js"></script>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div style="width: 32px;"></div>
+            <h2 class="text-center m-0"><i class="bi bi-keyboard me-2"></i>Text Organizer</h2>
+
+            <div class="dropdown">
+                <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-gear-fill fs-4"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><button class="dropdown-item" onclick="reloadHotkeys()">
+                        <i class="bi bi-arrow-repeat me-2"></i>Reload Hotkeys
+                    </button></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><button class="dropdown-item text-danger" onclick="resetApp()">
+                        <i class="bi bi-trash3 me-2"></i>Reset Application
+                    </button></li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="rows-container">
+            <!-- Rows will be generated here -->
+        </div>
+
+        <div class="d-flex justify-content-between mt-4 mb-5">
+            <button class="btn btn-outline-primary" onclick="addRow()">
+                <i class="bi bi-plus-lg me-1"></i> Add
+            </button>
+
+            <button class="btn btn-success" onclick="openFetchModal('CLIPBOARD')">
+                <i class="bi bi-clipboard-check me-1"></i> Clipboard
+            </button>
+        </div>
+
+        <!-- QR Code Modal -->
+        <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Scan to Fetch Text</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="mb-3 text-start">
+                            <label for="networkSelect" class="form-label small fw-bold">Network Interface:</label>
+                            <select class="form-select form-select-sm" id="networkSelect" onchange="updateQR()">
+                            </select>
+                        </div>
+                        <div id="qrcode" class="mb-3 d-flex justify-content-center"></div>
+                        <p class="text-muted small" id="urlDisplay"></p>
+                        <div id="status-msg" class="text-success fw-bold" style="display:none;">Text Received!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PIN Modal -->
+        <div class="modal fade" id="pinModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title w-100 text-center" id="pinModalTitle">Enter PIN</h5>
+                        <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center pt-2">
+                        <p id="pinModalMsg" class="small text-muted mb-4">Enter 4-digit PIN</p>
+
+                        <div class="d-flex justify-content-center gap-2 mb-3" id="pinInputsContainer">
+                            <input type="password" class="form-control pin-digit" maxlength="1" inputmode="numeric">
+                            <input type="password" class="form-control pin-digit" maxlength="1" inputmode="numeric">
+                            <input type="password" class="form-control pin-digit" maxlength="1" inputmode="numeric">
+                            <input type="password" class="form-control pin-digit" maxlength="1" inputmode="numeric">
+                        </div>
+
+                        <div id="pinError" class="text-danger small fw-bold" style="min-height: 20px;"></div>
+                        <div id="pinSuccess" class="text-success small fw-bold" style="display:none;">PIN Set Successfully!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Modal -->
+        <div class="modal fade" id="actionModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Password Field Action</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>What would you like to do with this password field?</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary" id="btnTempView">
+                                <i class="bi bi-eye me-2"></i>Temporarily View
+                            </button>
+                            <button class="btn btn-outline-danger" id="btnPermRemove">
+                                <i class="bi bi-unlock me-2"></i>Permanently Remove Protection
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Container -->
+        <div class="toast-container position-fixed bottom-0 end-0 p-3">
+            <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        Unable to delete
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/vendor/bootstrap.bundle.min.js"></script>
+    <script src="js/vendor/qrcode.min.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
