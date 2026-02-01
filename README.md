@@ -2,6 +2,9 @@
 
 A powerful, cross-platform desktop application to organize frequently used text snippets, assign global hotkeys, and securely fetch text from your mobile device's clipboard.
 
+This tool is targeted to be used on laptops/devices where cloud clipboard services are either not available or are blocked 
+
+
 ## 🚀 Key Features
 
 ### 🖥️ Desktop Text Organizer
@@ -30,8 +33,8 @@ A powerful, cross-platform desktop application to organize frequently used text 
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository-url>
-cd text-fetch
+git clone git@github.com:idaljeetsingh/text-organizer.git
+cd text-organizer
 ```
 
 ### 2. Install Dependencies
