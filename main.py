@@ -15,7 +15,40 @@ import random
 import string
 import queue
 import pyperclip
-from utils import get_local_ip, ensure_ssl_certs, copy_to_clipboard, load_app_data, save_app_data, delete_app_data, hash_pin
+import traceback
+from utils import get_local_ip, ensure_ssl_certs, copy_to_clipboard, load_app_data, save_app_data, delete_app_data, hash_pin, get_app_data_dir
+
+# --- Fix for PyInstaller Path ---
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+# --- Logging Setup ---
+LOG_FILE_PATH = os.path.join(get_app_data_dir(), "debug.log")
+
+class LoggerWriter:
+    def write(self, message):
+        if message.strip():
+            log_error(message)
+    def flush(self):
+        pass
+
+def log_error(msg):
+    try:
+        with open(LOG_FILE_PATH, "a") as f:
+            f.write(f"{time.ctime()}: {msg}\n")
+    except:
+        pass
+
+# Redirect stdout/stderr to prevent crashes in windowed mode
+if sys.stdout is None: sys.stdout = LoggerWriter()
+if sys.stderr is None: sys.stderr = LoggerWriter()
 
 # Initialize Eel with the 'web' folder
 eel.init('web')
@@ -63,15 +96,15 @@ mobile_app = bottle.Bottle()
 
 @mobile_app.route('/mobile_page')
 def mobile_ui():
-    return bottle.static_file('mobile.html', root='web')
+    return bottle.static_file('mobile.html', root=resource_path('web'))
 
 @mobile_app.route('/css/<filepath:path>')
 def server_static_css(filepath):
-    return bottle.static_file(filepath, root='web/css')
+    return bottle.static_file(filepath, root=resource_path('web/css'))
 
 @mobile_app.route('/js/<filepath:path>')
 def server_static_js(filepath):
-    return bottle.static_file(filepath, root='web/js')
+    return bottle.static_file(filepath, root=resource_path('web/js'))
 
 @mobile_app.route('/mobile_submit', method='POST')
 def mobile_submit():
@@ -102,11 +135,12 @@ def run_mobile_server():
     global PROTOCOL
     local_ip = get_local_ip()
     
-    if os.path.exists('cert.crt'): os.remove('cert.crt')
-    if os.path.exists('cert.key'): os.remove('cert.key')
-    
-    ssl_files = ensure_ssl_certs()
-    
+    try:
+        ssl_files = ensure_ssl_certs()
+    except Exception as e:
+        log_error(f"SSL Cert Generation Failed: {e}")
+        ssl_files = None
+
     run_args = {
         'host': '0.0.0.0',
         'port': MOBILE_PORT,
@@ -115,17 +149,17 @@ def run_mobile_server():
     
     if ssl_files:
         PROTOCOL = 'https'
-        print(f"Starting Mobile Server on HTTPS port {MOBILE_PORT} (IP: {local_ip})...")
+        log_error(f"Starting Mobile Server on HTTPS port {MOBILE_PORT} (IP: {local_ip})...")
         run_args['server'] = 'cheroot'
         run_args['certfile'] = ssl_files[0]
         run_args['keyfile'] = ssl_files[1]
     else:
-        print(f"Starting Mobile Server on HTTP port {MOBILE_PORT} (No SSL)...")
+        log_error(f"Starting Mobile Server on HTTP port {MOBILE_PORT} (No SSL)...")
     
     try:
         mobile_app.run(**run_args)
     except Exception as e:
-        print(f"Failed to start mobile server: {e}")
+        log_error(f"Failed to start mobile server: {e}\n{traceback.format_exc()}")
 
 # --- Eel Exposed Functions ---
 
@@ -146,6 +180,7 @@ def generate_qr(target_id, ip_address):
         'target_id': target_id
     }
     
+    # Use the IP address provided by the frontend (user selection)
     mobile_url = f"{PROTOCOL}://{ip_address}:{MOBILE_PORT}/mobile_page?key={session_key}"
     
     qr = qrcode.QRCode(version=1, box_size=10, border=4)
@@ -267,7 +302,7 @@ def typing_worker():
                 pyperclip.copy(old_clipboard)
                 
         except Exception as e:
-            print(f"Typing error: {e}")
+            log_error(f"Typing error: {e}")
         finally:
             release_all_modifiers()
             update_hotkeys()
@@ -286,7 +321,7 @@ def update_hotkeys():
         keyboard.unhook_all()
         time.sleep(0.1) 
     except Exception as e:
-        print(f"Error unhooking: {e}")
+        log_error(f"Error unhooking: {e}")
     
     for row_id, data in TEXT_DATA.items():
         if row_id == '__SETTINGS__': continue # Skip settings
@@ -296,9 +331,14 @@ def update_hotkeys():
             try:
                 keyboard.add_hotkey(shortcut, lambda r=row_id: on_hotkey_triggered(r), suppress=True)
             except Exception as e:
-                print(f"Failed to register hotkey {shortcut}: {e}")
+                log_error(f"Failed to register hotkey {shortcut}: {e}")
 
 if __name__ == '__main__':
+    # Clear log on startup
+    try:
+        with open(LOG_FILE_PATH, "w") as f: f.write("App Started\n")
+    except: pass
+
     worker_thread = threading.Thread(target=typing_worker, daemon=True)
     worker_thread.start()
     
@@ -315,3 +355,5 @@ if __name__ == '__main__':
         print("Exiting...")
         keyboard.unhook_all()
         os._exit(0)
+    except Exception as e:
+        log_error(f"Fatal Error: {e}\n{traceback.format_exc()}")

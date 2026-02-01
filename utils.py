@@ -75,8 +75,8 @@ def hash_pin(pin):
 
 # --- Persistence Logic ---
 
-def get_app_data_path():
-    """Returns the path to the application data file."""
+def get_app_data_dir():
+    """Returns the directory for application data."""
     app_name = "TextOrganizer"
     
     if platform.system() == "Windows":
@@ -88,7 +88,11 @@ def get_app_data_path():
 
     app_dir = os.path.join(base_dir, app_name)
     os.makedirs(app_dir, exist_ok=True)
-    return os.path.join(app_dir, "data.dat")
+    return app_dir
+
+def get_app_data_path():
+    """Returns the path to the application data file."""
+    return os.path.join(get_app_data_dir(), "data.dat")
 
 def save_app_data(data):
     """Saves the data dictionary to an encrypted file."""
@@ -216,14 +220,17 @@ def copy_to_clipboard(text):
         print(f"Failed to copy to clipboard: {e}")
 
 def ensure_ssl_certs():
-    """Generates a self-signed cert valid for ALL local IPs."""
-    cert_path = 'cert.crt'
-    key_path = 'cert.key'
+    """Generates a self-signed cert valid for ALL local IPs, or reuses existing ones."""
+    app_dir = get_app_data_dir()
+    cert_path = os.path.join(app_dir, 'cert.crt')
+    key_path = os.path.join(app_dir, 'cert.key')
     
-    if os.path.exists(cert_path): os.remove(cert_path)
-    if os.path.exists(key_path): os.remove(key_path)
+    # Check if certs exist and are valid (basic check)
+    if os.path.exists(cert_path) and os.path.exists(key_path):
+        print(f"Using existing SSL certificates from {app_dir}")
+        return (cert_path, key_path)
 
-    print("Generating self-signed certificate with SANs for all interfaces...")
+    print(f"Generating new self-signed certificate in {app_dir}...")
     
     key = rsa.generate_private_key(
         public_exponent=65537,
@@ -250,7 +257,7 @@ def ensure_ssl_certs():
     ).not_valid_before(
         datetime.utcnow()
     ).not_valid_after(
-        datetime.utcnow() + timedelta(days=365)
+        datetime.utcnow() + timedelta(days=3650) # Valid for 10 years
     ).add_extension(
         x509.SubjectAlternativeName(alt_names),
         critical=False,
