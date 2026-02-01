@@ -1,0 +1,239 @@
+/* --- Global & Desktop Styles --- */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.row-card {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: nowrap;
+}
+
+.row-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.text-input {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 150px;
+}
+
+.shortcut-wrapper {
+    position: relative;
+    width: 180px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+@media (min-width: 992px) {
+    .shortcut-wrapper {
+        width: 220px;
+    }
+}
+
+.shortcut-input {
+    width: 100%;
+    text-align: center;
+    font-family: monospace;
+    font-weight: bold;
+    color: #007bff;
+    padding-right: 25px;
+    font-size: 0.9rem;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-clear-shortcut {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #dc3545;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0;
+    display: none;
+    z-index: 5;
+}
+
+.btn-clear-shortcut:hover {
+    color: #a71d2a;
+}
+
+.shortcut-wrapper:hover .btn-clear-shortcut {
+    display: block;
+}
+
+.shortcut-input:not(:placeholder-shown) + .btn-clear-shortcut {
+    display: block;
+}
+
+.btn-fetch {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    flex-shrink: 0;
+}
+
+.btn-fetch:hover {
+    background-color: #5a6268;
+    color: white;
+}
+
+.password-masked {
+    -webkit-text-security: disc;
+}
+
+/* Toast Customization */
+.toast {
+    width: fit-content !important;
+    min-width: auto !important;
+}
+
+/* PIN Input Styles */
+.pin-digit {
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    font-size: 1.5rem;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    transition: all 0.2s;
+    caret-color: transparent; /* Hide cursor */
+}
+
+.pin-digit:focus {
+    border-color: #007bff;
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.1);
+    outline: none;
+}
+
+/* --- Mobile Specific Styles --- */
+.mobile-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #f4f7f6;
+    color: #333;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.mobile-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+
+.mobile-textarea {
+    width: 100%;
+    height: 140px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 2px dashed #cbd5e0;
+    margin-bottom: 20px;
+    font-family: inherit;
+    font-size: 16px;
+    box-sizing: border-box;
+    resize: none;
+    background-color: #f8f9fa;
+    text-align: center;
+    color: #495057;
+}
+
+.mobile-textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    background-color: #fff;
+}
+
+.mobile-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 16px 24px;
+    font-size: 1.1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: 600;
+    display: none; /* Hidden by default */
+}
+
+.success-message {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.checkmark-wrapper {
+    margin-bottom: 20px;
+}
+
+.checkmark {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    margin: 0 auto;
+}
+
+.checkmark__circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #28a745;
+    fill: none;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards, fillGreen .4s ease-in-out .4s forwards;
+}
+
+.checkmark__check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    stroke: #fff;
+    fill: none;
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes stroke {
+    100% { stroke-dashoffset: 0; }
+}
+
+@keyframes fillGreen {
+    100% { fill: #28a745; }
+}
+
+@keyframes scale {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+}

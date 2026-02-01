@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Text</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="mobile-body">
+    <div class="mobile-container" id="mainContainer">
+        <h1>Send Text</h1>
+        <textarea id="textContent" class="mobile-textarea" placeholder="Tap here to Paste & Send" readonly></textarea>
+        <button id="sendBtn" class="mobile-btn" type="button">Send Text</button>
+    </div>
+
+    <div class="mobile-container success-message" id="successContainer">
+        <div style="margin-bottom: 20px;">
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+        </div>
+        <h2 style="color: #28a745; margin: 0;">Sent!</h2>
+    </div>
+
+    <script>
+        const textContent = document.getElementById('textContent');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // Get session key from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionKey = urlParams.get('key');
+
+        async function sendData(text) {
+            if (!text) { alert("Please enter some text."); return; }
+            sendBtn.disabled = true; sendBtn.innerText = "Sending...";
+
+            try {
+                const response = await fetch('/mobile_submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: text,
+                        key: sessionKey
+                    }),
+                });
+
+                if (response.ok) {
+                    document.getElementById('mainContainer').style.display = 'none';
+                    document.getElementById('successContainer').style.display = 'flex';
+                } else {
+                    const msg = await response.text();
+                    alert('Failed: ' + msg);
+                    sendBtn.disabled = false; sendBtn.innerText = "Send Text";
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to send text.');
+                sendBtn.disabled = false; sendBtn.innerText = "Send Text";
+            }
+        }
+
+        function enableManualMode() {
+            textContent.readOnly = false;
+            textContent.placeholder = "Type or paste here...";
+            textContent.style.borderStyle = "solid";
+            textContent.style.borderColor = "#007bff";
+            sendBtn.style.display = "block";
+
+            // iOS Keyboard Hack: Blur then Focus
+            textContent.blur();
+            setTimeout(() => { textContent.focus(); }, 50);
+        }
+
+        let isProcessing = false;
+
+        textContent.addEventListener('click', async () => {
+            if (isProcessing || !textContent.readOnly) return;
+            isProcessing = true;
+
+            try {
+                // Try to read clipboard FIRST
+                const text = await navigator.clipboard.readText();
+
+                if (text && text.trim().length > 0) {
+                    // Success! Fill and send.
+                    textContent.value = text;
+                    await sendData(text);
+                } else {
+                    // Empty clipboard? Fallback to manual.
+                    console.log("Clipboard empty.");
+                    enableManualMode();
+                }
+            } catch (err) {
+                // Permission denied or error? Fallback to manual.
+                console.warn('Auto-paste failed:', err);
+                enableManualMode();
+            } finally {
+                isProcessing = false;
+            }
+        });
+
+        sendBtn.addEventListener('click', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            sendData(textContent.value);
+        });
+    </script>
+</body>
+</html>
